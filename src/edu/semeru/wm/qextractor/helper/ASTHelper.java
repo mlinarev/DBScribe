@@ -44,7 +44,8 @@ public static CompilationUnit getASTAndBindings(String source, String projectPat
 		String[] sources = { projectPath };
 		//String[] classPath = {  };
 		
-		String binariesFolder = "/Users/mariolinares/Documents/academy/SEMERU/Code-tools/API-Extractor/libs4ast";
+		//String binariesFolder = "/Users/mariolinares/Documents/academy/SEMERU/Code-tools/API-Extractor/libs4ast";
+		String binariesFolder = "libs";
 		List<String> jars = getJarsInfolder(binariesFolder);
 		String[] classPath = new String[jars.size()];
 		int i = 0;
