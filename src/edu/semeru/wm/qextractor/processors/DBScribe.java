@@ -14,10 +14,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 import edu.semeru.wm.CallGraph.Analyzer;
 import edu.semeru.wm.CallGraph.LeveledCallGraphComponent;
 import edu.semeru.wm.CallGraph.Method;
-
 import edu.semeru.wm.qextractor.helper.ConnectionManager;
 import edu.semeru.wm.qextractor.model.ConnectionVO;
 import edu.semeru.wm.qextractor.model.MethodQueryVO;
@@ -172,10 +173,13 @@ public class DBScribe {
 		
 	}
 	
-	public static void runDBScribe(String systemFolder, String outputFile, String host, String schema, String user, String passwd) throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException, IOException {
+	public static void runDBScribe(String systemFolder, String outputFile, String host, String schema, String user, String passwd, IProgressMonitor monitor) throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException, IOException {
 		//String outputFile = "/Users/mariolinares/Documents/academy/SEMERU/Code-tools/Q-Extractor/output/text.html";
 		// *Step 1: Process source code to (i) extract couples (caller-->callee), 
 		// (ii) locate methods using sql queries/statements, and (iii) parse the sql queries/statements
+		
+
+		monitor.setTaskName("Running JDBCProcessor ...");
 		System.out.println("DBScribe is running");
 		System.out.println("1. Running JDBCProcessor");
 		long startTime = System.currentTimeMillis();
@@ -193,7 +197,9 @@ public class DBScribe {
 		//processor.processFolder("/Users/mariolinares/Documents/academy/SEMERU/Code-tools/Q-Extractor/examples4test/agilefant-master/webapp/src");
 		//processor.processFolder("/Users/mariolinares/Documents/academy/SEMERU/Code-tools/Q-Extractor/examples4test/test3");
 		
+		monitor.worked(1);
 		System.out.println("--- JDBC processing: DONE");
+		monitor.setTaskName("JDBC processing: ...");
 		//----------------------------------------------------------------------------
 		
 		
@@ -223,7 +229,8 @@ public class DBScribe {
 				allMethods.add(cStr);
 			}
 		}
-
+		
+		monitor.worked(1);
 		System.out.println("2. Running Callgraph extractor");
 		
 		//Boyang's part that returns the partial call graph
@@ -231,9 +238,9 @@ public class DBScribe {
 		lcgComponent.analyze(methodCalls, methodQueriesMap, allMethods);
 		Analyzer analyzer = lcgComponent.getAz();
 		
-		
+		monitor.worked(1);
 		System.out.println("--- Callgraph extraction: DONE");
-		
+		monitor.setTaskName("Callgraph extraction: DONE ...");
 		
 		//----------------------------------------------------------------------------
 		// *Step 3: Extract schema constraints from db
@@ -251,13 +258,14 @@ public class DBScribe {
     	HashMap<String, TableConstraintsVO> constraints = dbie.getConstraints();    	
     	HashMap<String, List<String>> foreignKeyTables = dbie.getForeignKeyTables();
     	System.out.println("--- Constraints extraction: DONE");
-		
+    	monitor.worked(1);
    	
     	//----------------------------------------------------------------------------
     	// *Step 4: Propagate methods through partial call graph
     	QueriesPropagator qp = new QueriesPropagator();
     	HashMap<String, HashSet<String>> propagation= qp.getPropagatedMethods(methodQueriesMap, analyzer);
-    			
+    	monitor.worked(1);		
+    	monitor.setTaskName("Running Comments generator ...");
     	//----------------------------------------------------------------------------
 		// *Step 5: Generate comments using partial call graph, parsed queries, 
 		// and constraints extracted from the db
@@ -268,7 +276,7 @@ public class DBScribe {
 		System.out.println("--- Comments generation: DONE");
 		long endTime = System.currentTimeMillis();
 		System.out.println("* Total execution time(ms): "+(endTime-startTime));
-		
+		monitor.worked(1);
 	}
 	
 	/**
@@ -279,41 +287,41 @@ public class DBScribe {
 	 * @throws ClassNotFoundException 
 	 * @throws IOException 
 	 */
-	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException, IOException {
-		String systemFolder =null;
-		
-		String outputFile =null;
-		String outputFolder =null;
-		String host = null;
-		String schema = null;
-		String user = null;
-		String passwd = null;
-		
-		if(args[0].equals("-r")){
-			systemFolder = args[1];
-			outputFile = args[2];
-			host = args[3];
-			schema = args[4];
-			user = args[5];
-			passwd = args[6];
-			
-			DBScribe.runDBScribe(systemFolder, outputFile, host, schema, user, passwd);
-		}
-		else if(args[0].equals("-p")){
-			systemFolder = args[1];
-			outputFile = args[2];
-			
-			DBScribe.printDetectionList(systemFolder, outputFile );
-		}
-		
-		else if(args[0].equals("-cc")){
-			systemFolder = args[1];
-			outputFolder = args[2];
-			DBScribe.printPaths(systemFolder, outputFolder);
-		}
-			
-
-	}
+//	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException, IOException {
+//		String systemFolder =null;
+//		
+//		String outputFile =null;
+//		String outputFolder =null;
+//		String host = null;
+//		String schema = null;
+//		String user = null;
+//		String passwd = null;
+//		
+//		if(args[0].equals("-r")){
+//			systemFolder = args[1];
+//			outputFile = args[2];
+//			host = args[3];
+//			schema = args[4];
+//			user = args[5];
+//			passwd = args[6];
+//			
+//			DBScribe.runDBScribe(systemFolder, outputFile, host, schema, user, passwd);
+//		}
+//		else if(args[0].equals("-p")){
+//			systemFolder = args[1];
+//			outputFile = args[2];
+//			
+//			DBScribe.printDetectionList(systemFolder, outputFile );
+//		}
+//		
+//		else if(args[0].equals("-cc")){
+//			systemFolder = args[1];
+//			outputFolder = args[2];
+//			DBScribe.printPaths(systemFolder, outputFolder);
+//		}
+//			
+//
+//	}
 	
 	
 
